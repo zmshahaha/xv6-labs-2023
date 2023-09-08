@@ -1,2 +1,3 @@
 # LAB=util
-LAB=syscall
+# LAB=syscall
+LAB=pgtbl
