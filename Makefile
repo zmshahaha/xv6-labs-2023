@@ -193,7 +193,6 @@ UPROGS=\
 	$U/_primes\
 	$U/_find\
 	$U/_xargs\
-	$U/_alarmtest\
 
 
 
@@ -274,8 +273,9 @@ fs.img: mkfs/mkfs README $(UEXTRA) $(UPROGS)
 clean:
 	rm -f *.tex *.dvi *.idx *.aux *.log *.ind *.ilg *.dSYM *.zip \
 	*/*.o */*.d */*.asm */*.sym \
-	$U/initcode $U/initcode.out $K/kernel $U/usys.S \
-	mkfs/mkfs fs.img .gdbinit \
+	$U/initcode $U/initcode.out $K/kernel fs.img \
+	mkfs/mkfs .gdbinit \
+        $U/usys.S \
 	$(UPROGS) \
 	ph barrier
 
@@ -343,21 +343,6 @@ grade:
 	./grade-lab-$(LAB) $(GRADEFLAGS)
 
 ##
-## FOR web handin
-##
-
-
-WEBSUB := https://6828.scripts.mit.edu/2023/handin.py
-
-handin: tarball-pref myapi.key
-	@SUF=$(LAB); \
-	curl -f -F file=@lab-$$SUF-handin.tar.gz -F key=\<myapi.key $(WEBSUB)/upload \
-	    > /dev/null || { \
-		echo ; \
-		echo Submit seems to have failed.; \
-		echo Please go to $(WEBSUB)/ and upload the tarball manually.; }
-
-handin-check:
 ## FOR submissions
 ##
 
