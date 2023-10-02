@@ -273,9 +273,8 @@ fs.img: mkfs/mkfs README $(UEXTRA) $(UPROGS)
 clean:
 	rm -f *.tex *.dvi *.idx *.aux *.log *.ind *.ilg *.dSYM *.zip \
 	*/*.o */*.d */*.asm */*.sym \
-	$U/initcode $U/initcode.out $K/kernel fs.img \
-	mkfs/mkfs .gdbinit \
-        $U/usys.S \
+	$U/initcode $U/initcode.out $K/kernel $U/usys.S \
+	mkfs/mkfs fs.img .gdbinit \
 	$(UPROGS) \
 	ph barrier
 
