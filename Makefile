@@ -44,7 +44,7 @@ OBJS_KCSAN += \
 	$K/kcsan.o
 endif
 
-ifeq ($(LAB),$(filter $(LAB), lock))
+ifeq ($(LAB),lock)
 OBJS += \
 	$K/stats.o\
 	$K/sprintf.o
@@ -141,7 +141,7 @@ tags: $(OBJS) _init
 
 ULIB = $U/ulib.o $U/usys.o $U/printf.o $U/umalloc.o
 
-ifeq ($(LAB),$(filter $(LAB), lock))
+ifeq ($(LAB),lock)
 ULIB += $U/statistics.o
 endif
 
@@ -197,7 +197,7 @@ UPROGS=\
 
 
 
-ifeq ($(LAB),$(filter $(LAB), lock))
+ifeq ($(LAB),lock)
 UPROGS += \
 	$U/_stats
 endif
@@ -271,7 +271,7 @@ fs.img: mkfs/mkfs README $(UEXTRA) $(UPROGS)
 -include kernel/*.d user/*.d
 
 clean:
-	rm -rf *.tex *.dvi *.idx *.aux *.log *.ind *.ilg *.dSYM *.zip \
+	rm -rf *.tex *.dvi *.idx *.aux *.log *.ind *.ilg *.dSYM *.zip *.pcap \
 	*/*.o */*.d */*.asm */*.sym \
 	$U/initcode $U/initcode.out $U/usys.S $U/_* \
 	$K/kernel \
@@ -367,7 +367,7 @@ submit-check:
 		test "$$r" = y; \
 	fi
 
-zipball: submit-check
-	git archive --format=zip --output lab.zip HEAD
+zipball: clean submit-check
+	git archive --verbose --format zip --output lab.zip HEAD
 
 .PHONY: zipball clean grade submit-check
