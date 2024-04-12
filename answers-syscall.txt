@@ -1,0 +1,21 @@
+1. usertrap call syscall
+2. a7 is syscall number
+3. U-mode. Get by sstatus.SPP bit
+4. code: (a3 is num)
+  //num = p->trapframe->a7;
+  num = * (int *) 0;
+    80002052:	00002683          	lw	a3,0(zero) # 0 <_entry-0x80000000>
+  if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
+    80002056:	fff6871b          	addiw	a4,a3,-1
+    8000205a:	47d1                	li	a5,20
+    8000205c:	00e7ef63          	bltu	a5,a4,8000207a <syscall+0x3c>
+    80002060:	00369713          	slli	a4,a3,0x3
+    80002064:	00006797          	auipc	a5,0x6
+    80002068:	3ac78793          	addi	a5,a5,940 # 80008410 <syscalls>
+    8000206c:	97ba                	add	a5,a5,a4
+    8000206e:	639c                	ld	a5,0(a5)
+    80002070:	c789                	beqz	a5,8000207a <syscall+0x3c>
+5. access null, scause = Load page fault
+6. initcode, pid = 1
+
+https://pdos.csail.mit.edu/6.828/2023/labs/syscall.html
