@@ -150,7 +150,7 @@ static char *syscall_names[NELEM(syscalls)] = {
 [SYS_connect] sys_connect,
 #endif
 #ifdef LAB_PGTBL
-[SYS_pgaccess] sys_pgaccess,
+//[SYS_pgaccess] sys_pgaccess,
 #endif
 };
 

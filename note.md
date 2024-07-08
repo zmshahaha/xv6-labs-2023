@@ -16,3 +16,15 @@ xargs中有如下几行
 这是为了确保上个程序已经输出完。
 
 本xargs中，由于输入参数以换行符为分隔为一个参数，对每个参数均执行一次，则子程序的参数个数与xargs相同(父程序的程序名换成子程序最后一个参数)。所以这里复用了父程序的argv
+
+## lab pgtbl
+
+物理内存管理是使用链表把未分配物理页连起来，未分配物理页的最开头是run结构体，已分配物理页则无run结构体
+
+设备地址映射成可读可写，代码映射为可读可执行
+
+scause中0x0d是load page fault，在v1.9里没有规定，在v1.12中有，所以手册要看最新的https://five-embeddev.com/riscv-priv-isa-manual/Priv-v1.12/supervisor.html#sec:scause
+
+做ugetpid时因为没有映射成用户可访问而导致出错
+
+walkaddr是用户可访问才返回映射成功，所以tramframe返回0
