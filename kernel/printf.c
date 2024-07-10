@@ -133,3 +133,77 @@ printfinit(void)
   initlock(&pr.lock, "pr");
   pr.locking = 1;
 }
+
+/*
+  high address, bottom func
+                   .
+                   .
+      +->          .
+      |   +-----------------+   |
+      |   | return address  |   |
+      |   |   previous fp ------+
+      |   | saved registers |
+      |   | local variables |
+      |   |       ...       | <-+
+      |   +-----------------+   |
+      |   | return address  |   |
+      +------ previous fp   |   |
+          | saved registers |   |
+          | local variables |   |
+      +-> |       ...       |   |
+      |   +-----------------+   |
+      |   | return address  |   |
+      |   |   previous fp ------+
+      |   | saved registers |
+      |   | local variables |
+      |   |       ...       | <-+
+      |   +-----------------+   |
+      |   | return address  |   |
+      +------ previous fp   |   |
+          | saved registers |   |
+          | local variables |   |
+  $fp --> |       ...       |   |
+          +-----------------+   |
+          | return address  |   |
+          |   previous fp ------+
+          | saved registers |
+  $sp --> | local variables |
+          +-----------------+
+  low address, top func
+*/
+struct frame {
+  unsigned long fp;
+  unsigned long pc;
+};
+
+// get pc from frame->fp
+// get previos fp from frame->fp
+static int
+backtrace_unwind(struct frame *frame)
+{
+  if (frame->fp == PGROUNDUP(frame->fp))
+    return -1;
+
+  uint64 *pc = (uint64 *)(frame->fp - 8);
+  uint64 *fp = (uint64 *)(frame->fp - 16);
+
+  // ra is on frame, so we should -4 to get the calling pc
+  frame->pc = *pc - 4;
+  frame->fp = *fp;
+  return 0;
+}
+
+void
+backtrace(void)
+{
+  struct frame frame;
+
+  frame.fp = r_fp();
+
+  while (backtrace_unwind(&frame) == 0)
+  {
+    printf("%p\n", frame.pc);
+  }
+}
+
+  

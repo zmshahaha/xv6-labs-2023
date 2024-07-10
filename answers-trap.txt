@@ -1,0 +1,25 @@
+Read the code in call.asm for the functions g, f, and main. The instruction manual for RISC-V is on the reference page. Answer the following questions in answers-traps.txt:
+
+1.Which registers contain arguments to functions? For example, which register holds 13 in main's call to printf?
+
+24:	4635                	li	a2,13
+
+a2
+
+2.Where is the call to function f in the assembly code for main? Where is the call to g? (Hint: the compiler may inline functions.)
+
+26:	45b1                	li	a1,12
+
+compiler computed f(8)+1=12
+
+3.At what address is the function printf located?
+
+000000000000064a
+
+4.What value is in the register ra just after the jalr to printf in main?
+
+0x38, after jalr instruction
+
+编译时包含了-fno-omit-frame-pointer选项，所以可以backtrace
+
+backtrace中由于栈帧上面保存的是返回地址，所以回溯的时候减4已得到调用的地址
