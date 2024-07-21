@@ -28,3 +28,9 @@ scause中0x0d是load page fault，在v1.9里没有规定，在v1.12中有，所�
 做ugetpid时因为没有映射成用户可访问而导致出错
 
 walkaddr是用户可访问才返回映射成功，所以tramframe返回0
+
+## lab traps
+
+用户在用户态和在内核态接收到中断时候走的是不一样的，一个是走kernelvec，一个是走uservec
+
+如果alarm中断发生时不在用户进程的用户态呢？？？

@@ -194,10 +194,13 @@ static void
 commit()
 {
   if (log.lh.n > 0) {
+    // 先写log
     write_log();     // Write modified blocks from cache to log
-    write_head();    // Write header to disk -- the real commit
+    // 先写log本体，保证重启时head对应的log是有效的，重启后会读这个
+    write_head();    // Write header to disk -- the real commit这是真正的commit
     install_trans(0); // Now install writes to home locations
     log.lh.n = 0;
+    //最后要把这个header内容失效，防止不必要的重复写入
     write_head();    // Erase the transaction from the log
   }
 }

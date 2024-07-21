@@ -128,29 +128,22 @@ sys_uptime(void)
 }
 
 uint64
-sys_trace(void)
+sys_sigalarm(void)
 {
-  argint(0, &(myproc()->strace_mask));
+  struct proc *curr = myproc();
+
+  argint(0, &curr->alarm_interval);
+  argaddr(1, &curr->alarm_fn);
+  curr->next_alarm = ticks + curr->alarm_interval;
   return 0;
 }
 
 uint64
-sys_sysinfo(void)
+sys_sigreturn(void)
 {
-  uint64 addr;
-  argaddr(0,&addr);
-
-  struct proc *p;
-  p = myproc();
-
-  extern int get_freemem_size(void);
-  extern int get_proc_num(void);
-  struct sysinfo sysinfo;
-  sysinfo.freemem = get_freemem_size();
-  sysinfo.nproc = get_proc_num();
-
-  if (copyout(p->pagetable, addr, (char *)&sysinfo, sizeof(sysinfo)) < 0)
-    return -1;
-
-  return 0;
+  struct proc *p = myproc();
+  memmove(p->trapframe, &p->signal_trapframe, sizeof(p->signal_trapframe));
+  p->next_alarm = ticks + p->alarm_interval;
+  p->sighandling = 0;
+  return p->trapframe->a0;
 }

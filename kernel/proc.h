@@ -100,10 +100,15 @@ struct proc {
   uint64 sz;                   // Size of process memory (bytes)
   pagetable_t pagetable;       // User page table
   struct trapframe *trapframe; // data page for trampoline.S
+  struct trapframe signal_trapframe; // data page for trampoline.S
   struct usyscall *usyscall;   // data page of usyscall
   struct context context;      // swtch() here to run process
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
   int strace_mask;             // Strace mask
+  int alarm_interval;         // alarm interval
+  int next_alarm;             // last alarm
+  uint64 alarm_fn;
+  int sighandling;
 };
