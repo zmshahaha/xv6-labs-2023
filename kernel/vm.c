@@ -5,6 +5,8 @@
 #include "riscv.h"
 #include "defs.h"
 #include "fs.h"
+#include "spinlock.h"
+#include "proc.h"
 
 /*
  * the kernel's page table.
@@ -192,7 +194,7 @@ uvmunmap(pagetable_t pagetable, uint64 va, uint64 npages, int do_free)
       panic("uvmunmap: not a leaf");
     if(do_free){
       uint64 pa = PTE2PA(*pte);
-      kfree((void*)pa);
+      page_unref(pa);
     }
     *pte = 0;
   }
@@ -315,7 +317,6 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
   pte_t *pte;
   uint64 pa, i;
   uint flags;
-  char *mem;
 
   for(i = 0; i < sz; i += PGSIZE){
     if((pte = walk(old, i, 0)) == 0)
@@ -323,12 +324,13 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
     if((*pte & PTE_V) == 0)
       panic("uvmcopy: page not present");
     pa = PTE2PA(*pte);
+    if (*pte & PTE_W) {
+      *pte &= (~PTE_W);
+      *pte |= PTE_COW;
+    }
+    page_ref(pa);
     flags = PTE_FLAGS(*pte);
-    if((mem = kalloc()) == 0)
-      goto err;
-    memmove(mem, (char*)pa, PGSIZE);
-    if(mappages(new, i, PGSIZE, (uint64)mem, flags) != 0){
-      kfree(mem);
+    if(mappages(new, i, PGSIZE, (uint64)pa, flags) != 0){
       goto err;
     }
   }
@@ -367,8 +369,10 @@ copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
       return -1;
     pte = walk(pagetable, va0, 0);
     if(pte == 0 || (*pte & PTE_V) == 0 || (*pte & PTE_U) == 0 ||
-       (*pte & PTE_W) == 0)
+       (((*pte & PTE_W) == 0) && ((*pte & PTE_COW) == 0)))
       return -1;
+    if(*pte & PTE_COW)
+      do_write_fault(myproc(), va0);
     pa0 = PTE2PA(*pte);
     n = PGSIZE - (dstva - va0);
     if(n > len)
@@ -477,4 +481,31 @@ void vmprint(pagetable_t pagetable)
 {
   printf("page table %p\n", pagetable);
   scan_pte_page(pagetable, 0);
+}
+
+void do_write_fault(struct proc *p, uint64 pc)
+{
+  pagetable_t pgtbl = p->pagetable;
+  pte_t *pte = walk(pgtbl, pc, 0);
+  uint flags = PTE_FLAGS(*pte);
+  void *mem, *old_mem = (void *)PTE2PA(*pte);
+
+  if (!pte)
+    panic("invalid va");
+
+  if (!(flags & PTE_COW))
+    panic("the page can't be written");
+
+  mem = kalloc();
+  if (!mem) {
+    printf("memory exhausted, process %d killed\n", p->pid);
+    setkilled(p);
+    exit(-1);
+  }
+
+  memmove(mem, old_mem, PGSIZE);
+  flags |= PTE_W;
+  flags &= ~PTE_COW;
+  *pte = PA2PTE((uint64)mem) | flags;
+  page_unref((uint64)old_mem);
 }

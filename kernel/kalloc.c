@@ -23,6 +23,26 @@ struct {
   struct run *freelist;
 } kmem;
 
+#define PAGE_NUM ((PHYSTOP) - (KERNBASE))/(PGSIZE)
+static int pageref[PAGE_NUM];
+
+void page_ref(uint64 pa) {
+  int index = (pa-KERNBASE)/PGSIZE;
+  if ((index < 0) || (index >= PAGE_NUM))
+    panic("invalid pa");
+  pageref[index] ++;
+}
+
+void page_unref(uint64 pa) {
+  int index = (pa-KERNBASE)/PGSIZE;
+  if ((index < 0) || (index >= PAGE_NUM))
+    panic("invalid pa");
+  pageref[index] --;
+  if (pageref[index] == 0) {
+    kfree((void *)pa);
+  }
+}
+
 void
 kinit()
 {
@@ -59,6 +79,7 @@ kfree(void *pa)
   acquire(&kmem.lock);
   r->next = kmem.freelist;
   kmem.freelist = r;
+  pageref[((uint64)r - KERNBASE)/PGSIZE] = 1;
   release(&kmem.lock);
 }
 
@@ -78,6 +99,7 @@ kalloc(void)
 
   if(r)
     memset((char*)r, 5, PGSIZE); // fill with junk
+  pageref[((uint64)r - KERNBASE)/PGSIZE] = 1;
   return (void*)r;
 }
 
