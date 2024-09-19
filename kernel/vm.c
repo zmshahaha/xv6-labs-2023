@@ -483,24 +483,36 @@ void vmprint(pagetable_t pagetable)
   scan_pte_page(pagetable, 0);
 }
 
-void do_write_fault(struct proc *p, uint64 pc)
+void do_write_fault(struct proc *p, uint64 va)
 {
   pagetable_t pgtbl = p->pagetable;
-  pte_t *pte = walk(pgtbl, pc, 0);
-  uint flags = PTE_FLAGS(*pte);
-  void *mem, *old_mem = (void *)PTE2PA(*pte);
+  pte_t *pte;
+  uint flags;
+  void *mem, *old_mem;
 
-  if (!pte)
-    panic("invalid va");
+  if (va >= MAXVA) {
+    printf("invalid va\n");
+    goto fail;
+  }
 
-  if (!(flags & PTE_COW))
-    panic("the page can't be written");
+  pte = walk(pgtbl, va, 0);
+  flags = PTE_FLAGS(*pte);
+  old_mem = (void *)PTE2PA(*pte);
+
+  if (!pte) {
+    printf("invalid va\n");
+    goto fail;
+  }
+
+  if (!(flags & PTE_COW)) {
+    printf("the page can't be written");
+    goto fail;
+  }
 
   mem = kalloc();
   if (!mem) {
     printf("memory exhausted, process %d killed\n", p->pid);
-    setkilled(p);
-    exit(-1);
+    goto fail;
   }
 
   memmove(mem, old_mem, PGSIZE);
@@ -508,4 +520,9 @@ void do_write_fault(struct proc *p, uint64 pc)
   flags &= ~PTE_COW;
   *pte = PA2PTE((uint64)mem) | flags;
   page_unref((uint64)old_mem);
+  return;
+
+fail:
+  setkilled(p);
+  exit(-1);
 }
