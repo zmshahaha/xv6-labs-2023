@@ -15,10 +15,7 @@ mkfs
 kernel/kernel
 user/usys.S
 .gdbinit
-<<<<<<< HEAD
 *.zip
-=======
->>>>>>> e3512e5 (release lab cow)
 myapi.key
 *-handin.tar.gz
 xv6.out*
