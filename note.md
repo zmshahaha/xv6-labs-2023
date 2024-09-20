@@ -38,3 +38,11 @@ walkaddr是用户可访问才返回映射成功，所以tramframe返回0
 ## lab cow
 
 注意cow的地区不是epc而是epc的指令访问的地址
+
+## lab lock
+
+减少锁的争抢可以把资源按照一定规则分成几个区域，然后每个区域给一个lock
+
+bcache不用CPU来分割区域原因是一个blockno可能多次访问，而各次访问cpu可能不同，导致其buf在链表间迁移
+
+把bcache改成按照cpu来分配只需要把hash函数改成cpuid则可？
